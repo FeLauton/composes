@@ -9,10 +9,10 @@ services:
     deploy:
       labels:
         - traefik.enable=true
-        - traefik.http.routers.frontend.rule=Host(`${NEXT_DOMAIN}`)
+        - traefik.http.routers.frontend.rule=Host(`ticket.pigeon-flow.com.br`)
         - traefik.http.routers.frontend.entrypoints=websecure
         - traefik.http.routers.frontend.tls.certresolver=letsencryptresolver
-        - traefik.http.services.frontend.loadbalancer.server.port=3000
+        - traefik.http.services.frontend.loadbalancer.server.port=80
     networks:
       - network_public
     secrets:
