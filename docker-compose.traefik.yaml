@@ -1,3 +1,5 @@
+version: "3.7"
+
 services:
   traefik:
     image: traefik:2.11.2
@@ -18,15 +20,11 @@ services:
       - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.letsencryptresolver.acme.email=${EMAIL_ACME}"
       - "--certificatesresolvers.letsencryptresolver.acme.storage=/etc/traefik/letsencrypt/acme.json"
-      - "--certificatesresolvers.letsencryptresolver.acme.keytype=EC384"
-      - "--certificatesresolvers.letsencryptresolver.acme.tlschallenge=true"
-      - "--log.level=ERROR"
-      - "--log.filePath=/var/log/traefik/traefik.log"
+      - "--certificatesresolvers.letsencryptresolver.acme.keytype=RSA4096"
+      - "--log.level=INFO"
+      - "--log.format=json"
       - "--accesslog=true"
-      - "--accesslog.filepath=/var/log/traefik/access-log"
-      - "--metrics.prometheus=true"
-      - "--metrics.prometheus.entryPoint=metrics"
-      - "--entrypoints.metrics.address=:8082"
+      - "--accesslog.format=json"
     environment:
       EMAIL_ACME: "/run/secrets/EMAIL_ACME"
       NETWORK_NAME: "/run/secrets/NETWORK_NAME"
@@ -34,18 +32,16 @@ services:
       placement:
         constraints:
           - node.role == manager
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
-        - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true"
-        - "traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)"
-        - "traefik.http.routers.http-catchall.entrypoints=web"
-        - "traefik.http.routers.http-catchall.middlewares=redirect-https@docker"
-        - "traefik.http.routers.http-catchall.priority=1"
-        - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$apr1$$3yIucnqk$$O4QyIcb2o0Z3IlT6hGkJx/"
-        - "traefik.http.routers.api.middlewares=dashboard-auth"
+      replicas: 2
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "socket_proxy:/var/run/docker.sock:ro"
       - "vol_certificates:/etc/traefik/letsencrypt"
     ports:
       - target: 80
@@ -54,23 +50,11 @@ services:
       - target: 443
         published: 443
         mode: host
-      - target: 8080
-        published: 8080
-        mode: host  # ⚠️ Remova essa linha se não quiser expor o dashboard
-      - target: 8082
-        published: 8082
-        mode: host  # Expor métricas para Prometheus
     networks:
       - network_public
     secrets:
       - EMAIL_ACME
       - NETWORK_NAME
-
-secrets:
-  EMAIL_ACME:
-    external: true
-  NETWORK_NAME:
-    external: true
 
 volumes:
   vol_certificates:
