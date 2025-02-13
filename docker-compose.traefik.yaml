@@ -6,7 +6,7 @@ services:
       - "--providers.docker.swarmMode=true"
       - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network=network_public"
+      - "--providers.docker.network=${NETWORK_NAME}"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
@@ -14,13 +14,16 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true"
       - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencryptresolver.acme.email=$(cat /run/secrets/EMAIL_ACME)"
+      - "--certificatesresolvers.letsencryptresolver.acme.email=${EMAIL_ACME}"
       - "--certificatesresolvers.letsencryptresolver.acme.storage=/etc/traefik/letsencrypt/acme.json"
       - "--log.level=DEBUG"
       - "--log.format=common"
       - "--log.filePath=/var/log/traefik/traefik.log"
       - "--accesslog=true"
       - "--accesslog.filepath=/var/log/traefik/access-log"
+    environment:
+      EMAIL_ACME: "/run/secrets/EMAIL_ACME"
+      NETWORK_NAME: "/run/secrets/NETWORK_NAME"
     deploy:
       placement:
         constraints:
