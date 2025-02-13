@@ -4,7 +4,6 @@ services:
   frontend:
     image: felautoncolhado/frontend_base_vite:latest
     environment:
-      - NEXT_DOMAIN=/run/secrets/NEXT_DOMAIN
       - NODE_ENV=production
     deploy:
       labels:
@@ -15,12 +14,6 @@ services:
         - traefik.http.services.frontend.loadbalancer.server.port=80
     networks:
       - network_public
-    secrets:
-      - NEXT_DOMAIN
-
-secrets:
-  NEXT_DOMAIN:
-    external: true
 
 networks:
   network_public:

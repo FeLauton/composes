@@ -4,26 +4,19 @@ services:
   frontend_base_next:
     image: felautoncolhado/frontend_base_next:latest
     environment:
-      NEXT_DOMAIN: "/run/secrets/NEXT_DOMAIN"
-      NODE_ENV: "production"
+      - NODE_ENV=production
     deploy:
       replicas: 2
       restart_policy:
         condition: on-failure
       labels:
         - traefik.enable=true
-        - traefik.http.routers.frontend_base_next.rule=Host(`${NEXT_DOMAIN}`)
+        - traefik.http.routers.frontend_base_next.rule=Host(`nxt.pigeon-flow.com.br`)
         - traefik.http.routers.frontend_base_next.entrypoints=websecure
         - traefik.http.routers.frontend_base_next.tls.certresolver=letsencryptresolver
         - traefik.http.services.frontend_base_next.loadbalancer.server.port=3000
     networks:
       - network_public
-    secrets:
-      - NEXT_DOMAIN
-
-secrets:
-  NEXT_DOMAIN:
-    external: true
 
 networks:
   network_public:
