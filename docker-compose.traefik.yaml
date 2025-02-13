@@ -1,9 +1,10 @@
+version: "3.7"
+
 services:
   traefik:
     image: traefik:2.11.2
     command:
       - "--api.dashboard=true"
-      - "--api.insecure=true"
       - "--providers.docker.swarmMode=true"
       - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--providers.docker.exposedbydefault=false"
@@ -22,9 +23,6 @@ services:
       - "--log.filePath=/var/log/traefik/traefik.log"
       - "--accesslog=true"
       - "--accesslog.filepath=/var/log/traefik/access-log"
-    environment:
-      EMAIL_ACME: "/run/secrets/EMAIL_ACME"
-      NETWORK_NAME: "/run/secrets/NETWORK_NAME"
     deploy:
       placement:
         constraints:
@@ -37,6 +35,9 @@ services:
         - "traefik.http.routers.http-catchall.entrypoints=web"
         - "traefik.http.routers.http-catchall.middlewares=redirect-https@docker"
         - "traefik.http.routers.http-catchall.priority=1"
+    environment:
+      EMAIL_ACME: "/run/secrets/EMAIL_ACME"
+      NETWORK_NAME: "/run/secrets/NETWORK_NAME"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "vol_certificates:/etc/traefik/letsencrypt"
