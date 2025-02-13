@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  frontend:
+    image: felautoncolhado/frontend_base_vite:latest
+    environment:
+      - NEXT_DOMAIN=/run/secrets/NEXT_DOMAIN
+      - NODE_ENV=production
+    deploy:
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.frontend.rule=Host(`${NEXT_DOMAIN}`)
+        - traefik.http.routers.frontend.entrypoints=websecure
+        - traefik.http.routers.frontend.tls.certresolver=letsencryptresolver
+        - traefik.http.services.frontend.loadbalancer.server.port=3000
+    networks:
+      - network_public
+    secrets:
+      - NEXT_DOMAIN
+
+secrets:
+  NEXT_DOMAIN:
+    external: true
+
+networks:
+  network_public:
+    external: true
