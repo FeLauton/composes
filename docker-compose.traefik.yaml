@@ -1,12 +1,8 @@
-version: "3.7"
-
 services:
   traefik:
     image: traefik:2.11.2
     command:
       - "--api.dashboard=true"
-      - "--api.insecure=false"
-      - "--entrypoints.traefik.address=:8080"
       - "--providers.docker.swarmMode=true"
       - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--providers.docker.exposedbydefault=false"
@@ -20,11 +16,11 @@ services:
       - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.letsencryptresolver.acme.email=${EMAIL_ACME}"
       - "--certificatesresolvers.letsencryptresolver.acme.storage=/etc/traefik/letsencrypt/acme.json"
-      - "--certificatesresolvers.letsencryptresolver.acme.keytype=RSA4096"
-      - "--log.level=INFO"
-      - "--log.format=json"
+      - "--log.level=DEBUG"
+      - "--log.format=common"
+      - "--log.filePath=/var/log/traefik/traefik.log"
       - "--accesslog=true"
-      - "--accesslog.format=json"
+      - "--accesslog.filepath=/var/log/traefik/access-log"
     environment:
       EMAIL_ACME: "/run/secrets/EMAIL_ACME"
       NETWORK_NAME: "/run/secrets/NETWORK_NAME"
@@ -32,16 +28,16 @@ services:
       placement:
         constraints:
           - node.role == manager
-      replicas: 2
-      resources:
-        limits:
-          cpus: "0.50"
-          memory: 256M
-        reservations:
-          cpus: "0.25"
-          memory: 128M
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true"
+        - "traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)"
+        - "traefik.http.routers.http-catchall.entrypoints=web"
+        - "traefik.http.routers.http-catchall.middlewares=redirect-https@docker"
+        - "traefik.http.routers.http-catchall.priority=1"
     volumes:
-      - "socket_proxy:/var/run/docker.sock:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "vol_certificates:/etc/traefik/letsencrypt"
     ports:
       - target: 80
@@ -55,6 +51,12 @@ services:
     secrets:
       - EMAIL_ACME
       - NETWORK_NAME
+
+secrets:
+  EMAIL_ACME:
+    external: true
+  NETWORK_NAME:
+    external: true
 
 volumes:
   vol_certificates:
