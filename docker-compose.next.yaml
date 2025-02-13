@@ -12,7 +12,7 @@ services:
         condition: on-failure
       labels:
         - traefik.enable=true
-        - traefik.http.routers.frontend_base_next.rule=Host(`nxt.pigeon-flow.com.br`)
+        - traefik.http.routers.frontend_base_next.rule=Host("${NEXT_DOMAIN}")
         - traefik.http.routers.frontend_base_next.entrypoints=websecure
         - traefik.http.routers.frontend_base_next.tls.certresolver=letsencryptresolver
         - traefik.http.services.frontend_base_next.loadbalancer.server.port=3000
